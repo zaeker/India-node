@@ -1,0 +1,41 @@
+name: Select India IPs & Nodes
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每 6 小时自动运行一次
+  workflow_dispatch:        # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run India Selection Script
+        env:
+          SUBSCRIPTION_URL: ${{ secrets.SUBSCRIPTION_URL }}
+        run: |
+          python main.py
+
+      - name: Commit and Push Output
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add india_nodes.txt
+          git diff-index --quiet HEAD || git commit -m "Auto update India nodes [skip ci]"
+          git push
